@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import { leagueId, sleeperGet } from "@/lib/sleeper";
 
@@ -50,3 +53,4 @@ export default async function TeamsIndex() {
     </main>
   );
 }
+
