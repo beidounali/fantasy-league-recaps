@@ -1,6 +1,18 @@
 import { leagueId as currentLeagueIdFn, sleeperGet } from "./sleeper";
 import { fetchFantasyCalcValues, FCValueRow } from "./fantasycalc";
 
+function letterGrade(deltaPct: number) {
+  if (deltaPct >= 0.25) return "A+";
+  if (deltaPct >= 0.15) return "A";
+  if (deltaPct >= 0.08) return "B+";
+  if (deltaPct >= 0.03) return "B";
+  if (deltaPct >= -0.03) return "C";
+  if (deltaPct >= -0.08) return "C-";
+  if (deltaPct >= -0.15) return "D+";
+  if (deltaPct >= -0.25) return "D";
+  return "F";
+}
+
 type League = { total_rosters: number; previous_league_id?: string | null; season?: string };
 
 export type SleeperTransaction = {
@@ -61,10 +73,10 @@ export async function buildFantasyCalcIndex() {
  */
 function basePickValueForRound(round: number) {
   // “1sts are gold” baselines (mid pick)
-  if (round === 1) return 6500;
-  if (round === 2) return 2600;
-  if (round === 3) return 1100;
-  if (round === 4) return 500;
+  if (round === 1) return 5200;
+  if (round === 2) return 2000;
+  if (round === 3) return 850;
+  if (round === 4) return 350;
   return 0;
 }
 
@@ -198,7 +210,7 @@ export function computeTradeGradeForRoster(opts: {
 
   const total = receivedValue + sentValue;
   const deltaPct = total === 0 ? 0 : (receivedValue - sentValue) / total;
-  const grade = gradeFromDeltaPct(deltaPct);
+  const grade = letterGrade(deltaPct);
 
   return {
     playersReceived,
@@ -215,5 +227,9 @@ export function computeTradeGradeForRoster(opts: {
     grade,
   };
 }
+
+
+
+
 
 
