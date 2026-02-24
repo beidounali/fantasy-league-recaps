@@ -216,8 +216,8 @@ export default async function WeekPage(props: { params: Promise<{ week: string }
       for (const s of starterSorted.slice(0, 8)) {
         const ok =
           (b.pos && s.pos && b.pos === s.pos) ||
-          (b.pos && new Set(["RB", "WR", "TE"]).has(b.pos) && new Set(["RB", "WR", "TE"]).has(s.pos)) ||
-          (b.pos && new Set(["QB", "RB", "WR", "TE"]).has(b.pos) && new Set(["QB", "RB", "WR", "TE"]).has(s.pos));
+          (b.pos && s.pos && new Set(["RB", "WR", "TE"]).has(b.pos) && new Set(["RB", "WR", "TE"]).has(s.pos)) ||
+          (b.pos && s.pos && new Set(["QB", "RB", "WR", "TE"]).has(b.pos) && new Set(["QB", "RB", "WR", "TE"]).has(s.pos));
         if (!ok) continue;
         const gain = b.pts - s.pts;
         if (gain > 0 && (!worstSwap || gain > worstSwap.gain)) worstSwap = { benchPid: b.pid, starterPid: s.pid, gain };
@@ -396,3 +396,4 @@ export default async function WeekPage(props: { params: Promise<{ week: string }
     </main>
   );
 }
+
