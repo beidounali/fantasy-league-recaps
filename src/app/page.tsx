@@ -1,4 +1,7 @@
-﻿import Link from "next/link";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import Link from "next/link";
 import { leagueId, sleeperGet } from "@/lib/sleeper";
 
 type SleeperLeague = {
@@ -42,3 +45,4 @@ export default async function Home() {
     </main>
   );
 }
+
