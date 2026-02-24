@@ -39,8 +39,7 @@ function findOpponentAndResult(opts: {
     const opp = a.roster_id === opts.rosterId ? b : a;
 
     const margin = Math.abs(me.points - opp.points);
-    const result =
-      me.points === opp.points ? "T" : me.points > opp.points ? "W" : "L";
+    const result: "W" | "L" | "T" = me.points === opp.points ? "T" : me.points > opp.points ? "W" : "L";
 
     return {
       opponentRosterId: opp.roster_id,
@@ -370,3 +369,4 @@ export async function computePowerRankingsWithMovement(week: number) {
 
   return { league, week: w, rows };
 }
+

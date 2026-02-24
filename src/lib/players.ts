@@ -22,7 +22,7 @@ export async function getSleeperPlayersMap(): Promise<Map<string, SleeperPlayer>
 
   const map = new Map<string, SleeperPlayer>();
   for (const [id, p] of Object.entries(data)) {
-    map.set(id, { player_id: id, ...p });
+    map.set(id, { ...p, player_id: id });
   }
 
   cached = map;
@@ -39,3 +39,4 @@ export function formatPlayer(p?: SleeperPlayer) {
   const suffix = [p.position, p.team].filter(Boolean).join(" • ");
   return suffix ? `${name} (${suffix})` : name;
 }
+
