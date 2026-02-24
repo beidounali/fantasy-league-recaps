@@ -1,10 +1,12 @@
 import { leagueId, sleeperGet } from "./sleeper";
 
-type SleeperLeague = {league_id: string;
+export type SleeperLeague = {
+  league_id: string;
   season: string;
   previous_league_id?: string | null;
   settings: Record<string, any>;
-  roster_positions?: string[];\n};
+  roster_positions?: string[];
+};
 
 export async function getCurrentLeague() {
   const id = leagueId();
@@ -22,4 +24,3 @@ export async function getRecapLeague() {
   const prev = await getPreviousLeague();
   return prev ?? (await getCurrentLeague());
 }
-
