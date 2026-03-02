@@ -99,7 +99,7 @@ function positionalStrength(opts: {
   return { total, qbSum, rbSum, wrSum, teSum };
 }
 
-function roomNote(qbSum: number, rbSum: number, wrSum: number, teSum: number) {
+function roomNote(qbSum: number, rbSum: number, wrSum: number, teSum: number, rng: () => number) {
   const parts = [
     { k: "QB", v: qbSum },
     { k: "RB", v: rbSum },
@@ -112,70 +112,79 @@ function roomNote(qbSum: number, rbSum: number, wrSum: number, teSum: number) {
 
   const bestNote =
     best === "QB"
-      ? "The QB room is the engine."
+      ? seededPick(["QB room is carrying the luggage.", "Quarterbacks are doing the heavy lifting.", "QB stack is the weekly engine."], rng)
       : best === "RB"
-      ? "RB depth is a differentiator."
+      ? seededPick(["RB depth is doing the heavy lifting.", "Running backs are the floor and the ceiling.", "RB room is the weekly advantage."], rng)
       : best === "WR"
-      ? "The WR room stabilizes the weekly floor."
-      : "They have a real TE edge.";
+      ? seededPick(["WR stack is the weekly life raft.", "Receiver depth keeps the wheels on.", "WR group is the stabilizer."], rng)
+      : seededPick(["TE room is quietly elite.", "Tight ends are the cheat code.", "TE slot is actually an advantage."], rng);
 
   const worstNote =
     worst === "QB"
-      ? "QB depth remains the swing factor."
+      ? seededPick(["QB depth is the panic button.", "QB room is thin ice.", "One QB injury and things get weird."], rng)
       : worst === "RB"
-      ? "RB depth is the soft spot."
+      ? seededPick(["RB depth is the soft underbelly.", "Running back depth is the weekly anxiety.", "RB room is the leak."], rng)
       : worst === "WR"
-      ? "WR depth is the question mark."
-      : "TE production is the likely bottleneck.";
+      ? seededPick(["WR depth is a weekly question mark.", "Receivers are where it gets shaky.", "WR room needs reinforcements."], rng)
+      : seededPick(["TE production is the bottleneck.", "TE is the speed bump.", "Tight end output needs help."], rng);
 
   return `${bestNote} ${worstNote}`;
 }
 
-function recentFormNote(last4: Array<"W" | "L" | "T">) {
+function recentFormNote(last4: Array<"W" | "L" | "T">, rng: () => number) {
   if (last4.length === 0) return "";
   const wins = last4.filter((x) => x === "W").length;
-  if (wins >= 3) return "Form is trending up.";
-  if (wins <= 1) return "Recent form has been uneven.";
-  return "Mixed results over the last few.";
+  if (wins >= 3) return seededPick(["This team has been hot the last month.", "Recent form: cooking.", "They’ve been rolling for weeks."], rng);
+  if (wins <= 1) return seededPick(["Recent form is a red flag.", "The last few weeks have been ugly.", "Trend line is heading south."], rng);
+  return seededPick(["Mixed results lately — vibes are volatile.", "Hot and cold with no warning.", "Some good, some chaos."], rng);
 }
 
-function signatureLine(opts: { rank: number; move: number; tag: "HIGH" | "LOW" | "NONE"; last4Wins: number }) {
-  const { rank, move, tag, last4Wins } = opts;
-
-  if (rank <= 3 && (tag === "HIGH" || last4Wins >= 3)) return "Built to win in January.";
-  if (rank <= 6 && move > 0) return "Looks like a contender, not a pretender.";
-  if (rank <= 10 && last4Wins >= 3) return "The arrow is pointing up.";
-  if (tag === "LOW") return "Needs cleaner weekly execution.";
-  if (last4Wins <= 1) return "One more slip and the slide becomes a trend.";
-  if (move < 0) return "Still dangerous — but the margin for error is shrinking.";
-  return "The blueprint is there; consistency is the next step.";
-}
-
-function stableSeed(week: number, rosterId: number) {
-  // deterministic “random” so blurbs don’t shuffle on refresh
-  return (week * 1000003 + rosterId * 9176) >>> 0;
-}
-
-function pick<T>(arr: T[], seed: number) {
-  return arr[seed % arr.length];
-}
-
-function movePhrase(move: number, rank: number, streak: string) {
+function signatureLine(opts: { rank: number; move: number; streak: string; rng: () => number }) {
+  const { rank, move, streak, rng } = opts;
   const streakPart = streak ? ` (${streak})` : "";
-  if (move > 0) return `moves up ${move} to #${rank}${streakPart}.`;
-  if (move < 0) return `slides ${Math.abs(move)} to #${rank}${streakPart}.`;
-  return `holds at #${rank}${streakPart}.`;
+
+  const lines = [
+    `At #${rank}${streakPart}, the résumé is loud; the execution needs to stay that way.`,
+    `#${rank}${streakPart}: looks strong, but one more wobble turns into a slide.`,
+    `#${rank}${streakPart}: built to win, but don’t let the foot off the gas.`,
+    `#${rank}${streakPart}: the ceiling is high, the floor is still a risk.`,
+    `#${rank}${streakPart}: this is a contender if the coaching stays sane.`,
+  ];
+
+  if (move > 0) return `Climbing the ladder. ${seededPick(lines, rng)}`;
+  if (move < 0) return `Fell a couple rungs. ${seededPick(lines, rng)}`;
+  return seededPick(lines, rng);
 }
 
-function highLowTag(tag: "HIGH" | "LOW" | "NONE") {
-  if (tag === "HIGH") return "Posted the top score last week.";
-  if (tag === "LOW") return "Had the low score last week.";
+function mulberry32(seed: number) {
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededPick<T>(arr: T[], rng: () => number) {
+  return arr[Math.floor(rng() * arr.length)];
+}
+
+function movePhrase(move: number, rank: number, streak: string, rng: () => number) {
+  const streakPart = streak ? ` (${streak})` : "";
+  if (move > 0) return seededPick([`moves up ${move} to #${rank}${streakPart}.`, `climbs ${move} spots to #${rank}${streakPart}.`], rng);
+  if (move < 0) return seededPick([`slides ${Math.abs(move)} to #${rank}${streakPart}.`, `drops ${Math.abs(move)} to #${rank}${streakPart}.`], rng);
+  return seededPick([`holds at #${rank}${streakPart}.`, `stays parked at #${rank}${streakPart}.`], rng);
+}
+
+function highLowTag(tag: "HIGH" | "LOW" | "NONE", rng: () => number) {
+  if (tag === "HIGH") return seededPick(["Dropped the top score last week.", "Was the weekly high scorer.", "Put up the week’s best total."], rng);
+  if (tag === "LOW") return seededPick(["Put up the week’s low score. Ouch.", "Lowest score on the slate.", "Had the week’s basement score."], rng);
   return "";
 }
 
-function buildVariedAnalystBlurb(opts: {
-  week: number;
-  rosterId: number;
+function buildRoastBlurb(opts: {
+  rng: () => number;
+  name: string;
   recordEntering: string;
   move: number;
   rank: number;
@@ -186,36 +195,38 @@ function buildVariedAnalystBlurb(opts: {
   tagLine: string;
   sig: string;
 }) {
-  const seed = stableSeed(opts.week, opts.rosterId);
-
   const openers = [
-    `${opts.recordEntering} entering the week; ${movePhrase(opts.move, opts.rank, opts.streak)}`,
-    `${movePhrase(opts.move, opts.rank, opts.streak)} ${opts.recordEntering} entering the week.`,
-    `${opts.recordEntering} entering the week. ${movePhrase(opts.move, opts.rank, opts.streak)}`,
+    `${opts.recordEntering} entering the week; ${movePhrase(opts.move, opts.rank, opts.streak, opts.rng)}`,
+    `${movePhrase(opts.move, opts.rank, opts.streak, opts.rng)} ${opts.recordEntering} entering the week.`,
+    `${opts.recordEntering} entering the week. ${movePhrase(opts.move, opts.rank, opts.streak, opts.rng)}`,
+    `${opts.name}: ${movePhrase(opts.move, opts.rank, opts.streak, opts.rng)} ${opts.recordEntering} on the year.`,
+    `${opts.name} checked in at ${opts.recordEntering} and ${movePhrase(opts.move, opts.rank, opts.streak, opts.rng)}`,
   ];
 
-  const bodies = [
-    // Template A: result → tag → room → form → signature
-    () =>
-      `${pick(openers, seed)} ${opts.resultLine ? opts.resultLine + " " : ""}${opts.tagLine ? opts.tagLine + " " : ""}${opts.roomLine} ${opts.formLine} ${opts.sig}`,
-    // Template B: room → result → form → signature (tag optional)
-    () =>
-      `${pick(openers, seed)} ${opts.roomLine} ${opts.resultLine ? opts.resultLine + " " : ""}${opts.formLine} ${opts.tagLine ? opts.tagLine + " " : ""}${opts.sig}`,
-    // Template C: tag → result → room → signature
-    () =>
-      `${pick(openers, seed)} ${opts.tagLine ? opts.tagLine + " " : ""}${opts.resultLine ? opts.resultLine + " " : ""}${opts.roomLine} ${opts.sig}`,
-    // Template D: form → room → result → signature
-    () =>
-      `${pick(openers, seed)} ${opts.formLine} ${opts.roomLine} ${opts.resultLine ? opts.resultLine + " " : ""}${opts.sig}`,
-    // Template E: concise (still analyst tone)
-    () =>
-      `${pick(openers, seed)} ${opts.resultLine ? opts.resultLine + " " : ""}${opts.roomLine} ${opts.sig}`,
-    // Template F: “what it means” first
-    () =>
-      `${pick(openers, seed)} ${opts.sig} ${opts.roomLine} ${opts.resultLine ? opts.resultLine + " " : ""}${opts.formLine}`,
+  const resultBits = [
+    opts.resultLine,
+    opts.resultLine ? `${opts.resultLine} Don’t check the bench.` : undefined,
+    opts.resultLine ? `${opts.resultLine} The group chat noticed.` : undefined,
+    opts.resultLine ? `${opts.resultLine} That one hurt.` : undefined,
+  ].filter(Boolean) as string[];
+
+  const buttons = [
+    "This team can beat anyone, including itself.",
+    "Variance is undefeated.",
+    "If there’s a lane, they’ll drive in it. If there’s a ditch, they’ll find that too.",
+    "The ceiling is high; the floor is a trap door.",
   ];
 
-  return pick(bodies, seed + 13)();
+  const structures: Array<() => string> = [
+    () => `${seededPick(openers, opts.rng)} ${opts.tagLine ? opts.tagLine + " " : ""}${seededPick(resultBits, opts.rng) ?? ""} ${opts.roomLine} ${opts.formLine} ${opts.sig}`.trim(),
+    () => `${seededPick(openers, opts.rng)} ${opts.roomLine} ${seededPick(resultBits, opts.rng) ?? ""} ${opts.formLine} ${seededPick(buttons, opts.rng)} ${opts.sig}`.trim(),
+    () => `${seededPick(openers, opts.rng)} ${opts.formLine} ${opts.roomLine} ${opts.tagLine ? opts.tagLine + " " : ""}${opts.sig}`.trim(),
+    () => `${seededPick(openers, opts.rng)} ${seededPick(resultBits, opts.rng) ?? ""} ${opts.roomLine} ${seededPick(buttons, opts.rng)} ${opts.sig}`.trim(),
+    () => `${seededPick(openers, opts.rng)} ${opts.tagLine ? opts.tagLine + " " : ""}${opts.formLine} ${seededPick(buttons, opts.rng)} ${opts.sig}`.trim(),
+    () => `${seededPick(openers, opts.rng)} ${seededPick(buttons, opts.rng)} ${opts.roomLine} ${opts.sig}`.trim(),
+  ];
+
+  return seededPick(structures, opts.rng)();
 }
 
 export async function computePowerRankingsWithMovement(week: number) {
@@ -238,7 +249,6 @@ export async function computePowerRankingsWithMovement(week: number) {
   const valueOf = (pid: string) => fc.bySleeperId.get(String(pid))?.value ?? 0;
   const posOf = (pid: string) => playersMap.get(String(pid))?.position;
 
-  // High/low tags from LAST week (w-1)
   let highRoster: number | null = null;
   let lowRoster: number | null = null;
   if (prevMatchups.rows.length) {
@@ -247,7 +257,6 @@ export async function computePowerRankingsWithMovement(week: number) {
     lowRoster = sorted[sorted.length - 1]?.roster_id ?? null;
   }
 
-  // Recent form: last 4 results before current week (weeks w-4..w-1)
   const last4ByRoster = new Map<number, Array<"W" | "L" | "T">>();
   for (let wk = Math.max(1, w - 4); wk <= wPrev; wk++) {
     const m = await weekMatchups(leagueId, wk);
@@ -284,7 +293,6 @@ export async function computePowerRankingsWithMovement(week: number) {
     };
   });
 
-  // Score = strength + small momentum (current week)
   const maxPts = Math.max(...base.map((x) => x.curPts), 1);
   const maxStr = Math.max(...base.map((x) => x.strength), 1);
 
@@ -297,7 +305,6 @@ export async function computePowerRankingsWithMovement(week: number) {
     })
     .sort((a, b) => b.score - a.score);
 
-  // Previous week for movement
   const prevScored = base
     .map((x) => {
       const strengthNorm = x.strength / maxStr;
@@ -325,20 +332,22 @@ export async function computePowerRankingsWithMovement(week: number) {
         : undefined;
 
     const last4 = last4ByRoster.get(r.rosterId) ?? [];
-    const last4Wins = last4.filter((x) => x === "W").length;
     const streak = computeStreak(last4);
 
     const tag: "HIGH" | "LOW" | "NONE" =
       r.rosterId === highRoster ? "HIGH" : r.rosterId === lowRoster ? "LOW" : "NONE";
 
-    const roomLine = roomNote(r.qbSum, r.rbSum, r.wrSum, r.teSum);
-    const formLine = recentFormNote(last4);
-    const tagLine = highLowTag(tag);
-    const sig = signatureLine({ rank, move, tag, last4Wins });
+    const seed = (w * 1000003 + r.rosterId * 9176) >>> 0;
+    const rng = mulberry32(seed);
 
-    const blurb = buildVariedAnalystBlurb({
-      week: w,
-      rosterId: r.rosterId,
+    const roomLine = roomNote(r.qbSum, r.rbSum, r.wrSum, r.teSum, rng);
+    const formLine = recentFormNote(last4, rng);
+    const tagLine = highLowTag(tag, rng);
+    const sig = signatureLine({ rank, move, streak, rng });
+
+    const blurb = buildRoastBlurb({
+      rng,
+      name: r.name,
       recordEntering: r.recordEntering,
       move,
       rank,
@@ -369,4 +378,3 @@ export async function computePowerRankingsWithMovement(week: number) {
 
   return { league, week: w, rows };
 }
-

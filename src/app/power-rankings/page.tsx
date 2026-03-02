@@ -12,25 +12,25 @@ export default async function PowerRankingsIndex() {
 
   return (
     <main className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="text-xs font-extrabold uppercase tracking-wide text-[#0076B6]">Power Rankings</div>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+      <div className="panel">
+        <div className="text-xs font-extrabold uppercase tracking-[0.3em] text-slate-500">Power Rankings</div>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
           {league.season} Weekly Rankings
         </h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-3 text-slate-600">
           Strength is based on <b>3 QB + 4 RB + 6 WR + 2 TE</b> using current FantasyCalc player values (no picks),
           plus a small momentum bump from that week’s score.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="panel">
         <div className="font-semibold text-slate-900">Pick a week</div>
         <div className="mt-3 flex flex-wrap gap-2">
           {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((w) => (
             <Link
               key={w}
               href={`/power-rankings/${w}`}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className="btn-ghost"
             >
               Week {w}
             </Link>
@@ -40,4 +40,3 @@ export default async function PowerRankingsIndex() {
     </main>
   );
 }
-

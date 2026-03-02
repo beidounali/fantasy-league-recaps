@@ -45,6 +45,47 @@ export async function getLeagueWithPrev(leagueId: string) {
   return sleeperGet<League>(`/league/${leagueId}`);
 }
 
+function parsePickKey(name: string) {
+  const normalized = name.toLowerCase().replace(/\s+/g, " ").trim();
+  const match = normalized.match(/\b(20\d{2})\s*(early|mid|late)?\s*(1st|2nd|3rd|4th)\b/);
+  if (!match) return null;
+
+  const season = match[1];
+  const tier = match[2] ?? "";
+  const roundWord = match[3];
+  const round = roundWord === "1st" ? 1 : roundWord === "2nd" ? 2 : roundWord === "3rd" ? 3 : 4;
+  const key = `${season}-R${round}`;
+  return { key, tier };
+}
+
+function extractPickValues(values: FCValueRow[]) {
+  const bucket = new Map<string, { sum: number; count: number; mid?: number }>();
+
+  for (const row of values) {
+    const name = row.player?.name;
+    if (!name) continue;
+    const parsed = parsePickKey(name);
+    if (!parsed) continue;
+
+    const entry = bucket.get(parsed.key) ?? { sum: 0, count: 0 };
+    if (parsed.tier === "mid") {
+      entry.mid = row.value;
+    } else {
+      entry.sum += row.value;
+      entry.count += 1;
+    }
+    bucket.set(parsed.key, entry);
+  }
+
+  const map = new Map<string, number>();
+  for (const [key, entry] of bucket.entries()) {
+    const avg = entry.count ? entry.sum / entry.count : 0;
+    map.set(key, entry.mid ?? avg);
+  }
+
+  return map;
+}
+
 export async function buildFantasyCalcIndex() {
   const id = currentLeagueIdFn();
   const league = await sleeperGet<League>(`/league/${id}`);
@@ -61,18 +102,20 @@ export async function buildFantasyCalcIndex() {
     const sid = row.player?.sleeperId;
     if (sid) bySleeperId.set(String(sid), row);
   }
-  return { bySleeperId, league };
+
+  const pickValueByKey = extractPickValues(values);
+
+  return { bySleeperId, league, pickValueByKey };
 }
 
 /**
  * PICK VALUE MODEL (Dynasty SF PPR)
  * - Baseline per round (mid pick)
- * - Discount future years
+ * - Discount future years (starting 2028)
  *
  * Tweak these numbers any time to match your league market.
  */
 function basePickValueForRound(round: number) {
-  // “1sts are gold” baselines (mid pick)
   if (round === 1) return 5200;
   if (round === 2) return 2000;
   if (round === 3) return 850;
@@ -81,11 +124,17 @@ function basePickValueForRound(round: number) {
 }
 
 function yearDiscount(yearsOut: number) {
-  // Softer discount so future 1sts remain premium
   return Math.pow(0.90, Math.max(0, yearsOut));
 }
 
-export function valueOfPick(p: { season: string; round: number }, currentSeason: string) {
+export function valueOfPick(
+  p: { season: string; round: number },
+  currentSeason: string,
+  pickValueByKey?: Map<string, number>
+) {
+  const key = `${p.season}-R${p.round}`;
+  if (pickValueByKey?.has(key)) return pickValueByKey.get(key) ?? 0;
+
   const base = basePickValueForRound(p.round);
   if (base === 0) return 0;
 
@@ -93,7 +142,10 @@ export function valueOfPick(p: { season: string; round: number }, currentSeason:
   const currentNum = Number(currentSeason);
   const yearsOut = Number.isFinite(seasonNum) && Number.isFinite(currentNum) ? seasonNum - currentNum : 0;
 
-  return base * yearDiscount(yearsOut);
+  if (Number.isFinite(seasonNum) && seasonNum >= 2028) {
+    return base * yearDiscount(yearsOut);
+  }
+  return base;
 }
 
 /**
@@ -193,8 +245,9 @@ export function computeTradeGradeForRoster(opts: {
   rosterId: number;
   valueOfPlayer: (playerId: string) => number;
   currentSeason: string;
+  pickValueByKey?: Map<string, number>;
 }) {
-  const { trade, rosterId, valueOfPlayer, currentSeason } = opts;
+  const { trade, rosterId, valueOfPlayer, currentSeason, pickValueByKey } = opts;
 
   const { received: playersReceived, sent: playersSent } = splitPlayersForRoster(trade, rosterId);
   const { picksReceived, picksSent } = splitPicksForRoster(trade, rosterId);
@@ -202,8 +255,8 @@ export function computeTradeGradeForRoster(opts: {
   const receivedPlayersValue = playersReceived.reduce((sum, pid) => sum + valueOfPlayer(pid), 0);
   const sentPlayersValue = playersSent.reduce((sum, pid) => sum + valueOfPlayer(pid), 0);
 
-  const receivedPicksValue = picksReceived.reduce((sum, p) => sum + valueOfPick(p, currentSeason), 0);
-  const sentPicksValue = picksSent.reduce((sum, p) => sum + valueOfPick(p, currentSeason), 0);
+  const receivedPicksValue = picksReceived.reduce((sum, p) => sum + valueOfPick(p, currentSeason, pickValueByKey), 0);
+  const sentPicksValue = picksSent.reduce((sum, p) => sum + valueOfPick(p, currentSeason, pickValueByKey), 0);
 
   const receivedValue = receivedPlayersValue + receivedPicksValue;
   const sentValue = sentPlayersValue + sentPicksValue;
@@ -227,9 +280,3 @@ export function computeTradeGradeForRoster(opts: {
     grade,
   };
 }
-
-
-
-
-
-

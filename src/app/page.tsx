@@ -21,28 +21,45 @@ export default async function Home() {
   const totalWeeks = regularSeasonWeeks + playoffRounds;
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold">{league.name}</h1>
-      <p className="mt-2 text-slate-600">
-        Season: <span className="font-semibold">{league.season}</span> • Teams:{" "}
-        <span className="font-semibold">{league.total_rosters}</span>
-      </p>
-      <p className="mt-2 text-slate-600">
-        Weeks covered: <span className="font-semibold">{totalWeeks}</span> (regular{" "}
-        {regularSeasonWeeks} + playoffs {playoffRounds})
-      </p>
+    <main className="mx-auto max-w-3xl space-y-6 p-6">
+      <div className="panel">
+        <div className="text-xs font-extrabold uppercase tracking-[0.3em] text-slate-500">Dynasty Hub</div>
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-900">{league.name}</h1>
+        <p className="mt-3 text-slate-600">
+          Season: <span className="font-semibold text-slate-900">{league.season}</span> • Teams:{" "}
+          <span className="font-semibold text-slate-900">{league.total_rosters}</span>
+        </p>
+        <p className="mt-2 text-slate-600">
+          Weeks covered: <span className="font-semibold text-slate-900">{totalWeeks}</span> (regular{" "}
+          {regularSeasonWeeks} + playoffs {playoffRounds})
+        </p>
 
-      <div className="mt-6 flex gap-4">
-        <Link className="rounded-md bg-black px-4 py-2 text-white" href="/weeks">
-          Weekly Recaps
-        </Link>
-        <Link className="rounded-md border px-4 py-2" href="/teams">
-          Teams
-        </Link>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link className="btn-primary" href="/weeks">
+            Weekly Recaps
+          </Link>
+          <Link className="btn-ghost" href="/teams">
+            Teams
+          </Link>
+        </div>
       </div>
 
-      <p className="mt-8 text-sm text-slate-500">League ID: {id}</p>
+      <div className="panel">
+        <h2 className="text-2xl font-semibold text-slate-900">Quick Links</h2>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link className="btn-ghost" href="/power-rankings">
+            Power Rankings
+          </Link>
+          <Link className="btn-ghost" href="/weeks">
+            Weekly Recaps
+          </Link>
+          <Link className="btn-ghost" href="/teams">
+            Team Pages
+          </Link>
+        </div>
+      </div>
+
+      <p className="text-sm text-slate-500">League ID: {id}</p>
     </main>
   );
 }
-

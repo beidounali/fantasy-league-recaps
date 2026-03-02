@@ -18,17 +18,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900">
-        <header className="border-b border-slate-200 bg-white">
-          <div style={{ background: PRIMARY }}>
-            <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between">
+      <body className="min-h-screen text-slate-900 antialiased">
+        <header className="border-b border-slate-200/60 bg-white/70 backdrop-blur">
+          <div className="header-band">
+            <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-7 md:flex-row md:items-center md:justify-between">
               <Link href="/" className="flex items-center gap-4">
                 <img
                   src={LOGO_URL}
                   alt={LEAGUE_NAME}
-                  className="h-28 w-28 rounded-2xl bg-white object-cover shadow-md md:h-32 md:w-32"
+                  className="h-24 w-24 rounded-2xl bg-white object-cover shadow-lg md:h-28 md:w-28"
                 />
-                <div>
+                <div className="relative z-10">
                   <div className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
                     {LEAGUE_NAME}
                   </div>
@@ -39,13 +39,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
 
               <nav className="flex flex-wrap gap-2">
-                <Link href="/weeks" className="rounded-lg bg-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/25">
+                <Link href="/weeks" className="nav-pill">
                   Weekly Recaps
                 </Link>
-                <Link href="/teams" className="rounded-lg bg-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/25">
+                <Link href="/teams" className="nav-pill">
                   Teams
                 </Link>
-                <Link href="/power-rankings" className="rounded-lg bg-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/25">
+                <Link href="/power-rankings" className="nav-pill">
                   Power Rankings
                 </Link>
               </nav>
@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="h-1 w-full" style={{ background: ACCENT }} />
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
       </body>
     </html>
   );

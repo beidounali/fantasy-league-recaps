@@ -13,22 +13,27 @@ export default async function WeeksIndex() {
   const totalWeeks = regularSeasonWeeks + playoffRounds;
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold">Weekly Recaps ({league.season})</h1>
-      <p className="mt-2 text-slate-600">
-        Weeks 1–{totalWeeks} • Playoffs start Week {playoffStart}
-      </p>
+    <main className="mx-auto max-w-3xl space-y-6 p-6">
+      <div className="panel">
+        <div className="text-xs font-extrabold uppercase tracking-[0.3em] text-slate-500">Weekly Schedule</div>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Weekly Recaps ({league.season})</h1>
+        <p className="mt-2 text-slate-600">
+          Weeks 1–{totalWeeks} • Playoffs start Week {playoffStart}
+        </p>
+      </div>
 
-      <ul className="mt-6 space-y-2">
-        {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((w) => (
-          <li key={w}>
-            <Link className="underline" href={`/weeks/${w}`}>
-              Week {w} {w >= playoffStart ? "(Playoffs)" : ""}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="panel">
+        <ul className="space-y-3">
+          {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((w) => (
+            <li key={w} className="list-card">
+              <Link className="link-lion" href={`/weeks/${w}`}>
+                Week {w} {w >= playoffStart ? "(Playoffs)" : ""}
+              </Link>
+              <span className="text-sm text-slate-500">Recap</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </main>
   );
 }
-
