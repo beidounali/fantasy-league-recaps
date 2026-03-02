@@ -163,7 +163,7 @@ function describeTrade(opts: {
 
   const userById = new Map(users.map((u) => [u.user_id, u]));
 
-  const rosterIdByOwnerId = new Map(rosters.map((r) => [r.owner_id, r.roster_id]));
+  const rosterIdByOwnerId = new Map(rosters.map((r) => [String(r.owner_id), r.roster_id]));
 
   const adds = trade.adds ?? {};
   const drops = trade.drops ?? {};
@@ -186,13 +186,13 @@ function describeTrade(opts: {
       .map((p) => `Pick ${p.season} R${p.round} (${valueOfPick(p, currentSeason, pickValueByKey).toFixed(0)})`);
 
     const sentPicks = picks
-      .filter((p) => rosterIdByOwnerId.get(p.previous_owner_id) === rid)
+      .filter((p) => rosterIdByOwnerId.get(String(p.previous_owner_id)) === rid)
       .map((p) => `Pick ${p.season} R${p.round} (${valueOfPick(p, currentSeason, pickValueByKey).toFixed(0)})`);
 
     const receivedPlayersValue = receivedPlayerIds.reduce((sum, pid) => sum + valueOfPlayer(pid), 0);
     const sentPlayersValue = sentPlayerIds.reduce((sum, pid) => sum + valueOfPlayer(pid), 0);
     const receivedPicksValue = picks.filter((p) => p.roster_id === rid).reduce((sum, p) => sum + valueOfPick(p, currentSeason, pickValueByKey), 0);
-    const sentPicksValue = picks.filter((p) => rosterIdByOwnerId.get(p.previous_owner_id) === rid).reduce((sum, p) => sum + valueOfPick(p, currentSeason, pickValueByKey), 0);
+    const sentPicksValue = picks.filter((p) => rosterIdByOwnerId.get(String(p.previous_owner_id)) === rid).reduce((sum, p) => sum + valueOfPick(p, currentSeason, pickValueByKey), 0);
 
     return {
       rosterId: rid,
@@ -515,5 +515,6 @@ export default async function WeekPage(props: { params: Promise<{ week: string }
     </main>
   );
 }
+
 
 
