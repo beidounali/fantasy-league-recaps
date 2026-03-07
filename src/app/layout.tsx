@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <img
                   src={LOGO_URL}
                   alt={LEAGUE_NAME}
-                  className="h-28 w-28 rounded-2xl bg-white object-cover shadow-lg md:h-36 md:w-36"
+                  className="h-28 w-28 rounded-2xl bg-white object-cover shadow-lg md:h-36 md:w-36 mt-2"
                 />
                 <div className="relative z-10">
                   <div className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
@@ -60,4 +60,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 
